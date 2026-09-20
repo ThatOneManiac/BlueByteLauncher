@@ -37,11 +37,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
 import com.bluebyte.launcher.ui.theme.CyanAccent
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 @Composable
 fun SettingsDialog(
     viewModel: LauncherViewModel,
     onDismiss: () -> Unit
 ) {
+    val wallpaperLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { viewModel.backgroundUri = it.toString() }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -123,7 +132,7 @@ fun SettingsDialog(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Background", style = MaterialTheme.typography.titleMedium, color = Color.White)
                         Button(
-                            onClick = { /* Wallpaper picker would go here */ },
+                            onClick = { wallpaperLauncher.launch("image/*") },
                             colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
                         ) {
                             Text("Choose Wallpaper", color = Color.Black)

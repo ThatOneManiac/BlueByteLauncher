@@ -50,8 +50,8 @@ class LauncherViewModel : ViewModel() {
     val pinnedToDesktop = _pinnedToDesktop.asStateFlow()
 
     // Settings States
-    var tileSize by mutableStateOf(56.dp)
-    var columns by mutableStateOf(5)
+    var tileSize by mutableStateOf(65.dp)
+    var columns by mutableStateOf(3)
     var backgroundColor by mutableStateOf(Color.Black)
     var backgroundUri by mutableStateOf<String?>(null)
     var orientationMode by mutableStateOf("auto") // "auto", "portrait", "landscape"
