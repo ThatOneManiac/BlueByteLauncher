@@ -129,8 +129,8 @@ fun LauncherScreen(viewModel: LauncherViewModel = viewModel()) {
                 onAppClick = { packageName ->
                     viewModel.launchApp(context, packageName)
                 },
-                onPinTaskbar = { viewModel.togglePinToTaskbar(it) },
-                onPinDesktop = { viewModel.togglePinToDesktop(it) },
+                onPinTaskbar = { viewModel.togglePinToTaskbar(context, it) },
+                onPinDesktop = { viewModel.togglePinToDesktop(context, it) },
                 onAppSettings = { viewModel.openAppSettings(context, it) },
                 tileSize = viewModel.tileSize,
                 columns = viewModel.columns,
@@ -160,8 +160,8 @@ fun LauncherScreen(viewModel: LauncherViewModel = viewModel()) {
                         viewModel.launchApp(context, packageName)
                         isStartMenuOpen = false
                     },
-                    onPinTaskbar = { viewModel.togglePinToTaskbar(it) },
-                    onPinDesktop = { viewModel.togglePinToDesktop(it) },
+                    onPinTaskbar = { viewModel.togglePinToTaskbar(context, it) },
+                    onPinDesktop = { viewModel.togglePinToDesktop(context, it) },
                     onAppSettings = { viewModel.openAppSettings(context, it) }
                 )
             }

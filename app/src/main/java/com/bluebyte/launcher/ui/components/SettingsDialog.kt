@@ -36,19 +36,23 @@ import com.bluebyte.launcher.viewmodel.LauncherViewModel
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
 import com.bluebyte.launcher.ui.theme.CyanAccent
-
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SettingsDialog(
     viewModel: LauncherViewModel,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     val wallpaperLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { viewModel.backgroundUri = it.toString() }
+        uri?.let { 
+            viewModel.backgroundUri = it.toString()
+            viewModel.saveSettings(context)
+        }
     }
 
     Dialog(
@@ -88,7 +92,10 @@ fun SettingsDialog(
                         Text(text = "Tile Size: ${viewModel.tileSize.value.toInt()}dp", color = Color.White)
                         Slider(
                             value = viewModel.tileSize.value,
-                            onValueChange = { viewModel.tileSize = it.dp },
+                            onValueChange = { 
+                                viewModel.tileSize = it.dp 
+                                viewModel.saveSettings(context)
+                            },
                             valueRange = 32f..80f,
                             colors = SliderDefaults.colors(thumbColor = CyanAccent, activeTrackColor = CyanAccent)
                         )
@@ -96,7 +103,10 @@ fun SettingsDialog(
                         Text(text = "Columns: ${viewModel.columns}", color = Color.White)
                         Slider(
                             value = viewModel.columns.toFloat(),
-                            onValueChange = { viewModel.columns = it.toInt() },
+                            onValueChange = { 
+                                viewModel.columns = it.toInt() 
+                                viewModel.saveSettings(context)
+                            },
                             valueRange = 3f..7f,
                             steps = 4,
                             colors = SliderDefaults.colors(thumbColor = CyanAccent, activeTrackColor = CyanAccent)
@@ -108,7 +118,10 @@ fun SettingsDialog(
                             listOf("auto", "portrait", "landscape").forEach { mode ->
                                 FilterChip(
                                     selected = viewModel.orientationMode == mode,
-                                    onClick = { viewModel.orientationMode = mode },
+                                    onClick = { 
+                                        viewModel.orientationMode = mode 
+                                        viewModel.saveSettings(context)
+                                    },
                                     label = { Text(mode.replaceFirstChar { it.uppercase() }) },
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = CyanAccent,
@@ -138,7 +151,11 @@ fun SettingsDialog(
                             Text("Choose Wallpaper", color = Color.Black)
                         }
                         Button(
-                            onClick = { viewModel.backgroundColor = Color.Black; viewModel.backgroundUri = null },
+                            onClick = { 
+                                viewModel.backgroundColor = Color.Black
+                                viewModel.backgroundUri = null 
+                                viewModel.saveSettings(context)
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                             modifier = Modifier.border(1.dp, CyanAccent, RoundedCornerShape(20.dp))
                         ) {

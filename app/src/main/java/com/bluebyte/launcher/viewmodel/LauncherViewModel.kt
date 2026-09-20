@@ -56,108 +56,55 @@ class LauncherViewModel : ViewModel() {
     var backgroundUri by mutableStateOf<String?>(null)
     var orientationMode by mutableStateOf("auto") // "auto", "portrait", "landscape"
 
+    private fun getPrefs(context: Context) = context.getSharedPreferences("launcher_prefs", Context.MODE_PRIVATE)
+
+    fun saveSettings(context: Context) {
+        getPrefs(context).edit().apply {
+            putFloat("tile_size", tileSize.value)
+            putInt("columns", columns)
+            putLong("bg_color", backgroundColor.value.toLong())
+            putString("bg_uri", backgroundUri)
+            putString("orientation", orientationMode)
+            putStringSet("pinned_taskbar", _pinnedToTaskbar.value)
+            putStringSet("pinned_desktop", _pinnedToDesktop.value)
+            apply()
+        }
+    }
+
+    fun loadSettings(context: Context) {
+        val prefs = getPrefs(context)
+        tileSize = prefs.getFloat("tile_size", 65f).dp
+        columns = prefs.getInt("columns", 3)
+        backgroundColor = Color(prefs.getLong("bg_color", Color.Black.value.toLong()).toULong())
+        backgroundUri = prefs.getString("bg_uri", null)
+        orientationMode = prefs.getString("orientation", "auto") ?: "auto"
+        _pinnedToTaskbar.value = prefs.getStringSet("pinned_taskbar", emptySet()) ?: emptySet()
+        _pinnedToDesktop.value = prefs.getStringSet("pinned_desktop", emptySet()) ?: emptySet()
+    }
+
     val fortunes = listOf(
         "\"Anakin is dead, I killed him.\" ― Darth Vader",
         "\"An eye for an eye makes the whole world blind.\" ― Mahatma Gandhi",
-        "\"Frankly, my dear, I don't give a damn.\" ― Gone with the Wind",
-        "\"I'm going to make him an offer he can't refuse.\" ― The Godfather",
-        "\"Toto, I've a feeling we're not in Kansas anymore.\" ― The Wizard of Oz",
-        "\"Here's looking at you, kid.\" ― Casablanca",
-        "\"Go ahead, make my day.\" ― Sudden Impact",
-        "\"May the Force be with you.\" ― Star Wars",
-        "\"Fasten your seatbelts. It's going to be a bumpy night.\" ― All About Eve",
-        "\"You talkin' to me?\" ― Taxi Driver",
-        "\"What we've got here is failure to communicate.\" ― Cool Hand Luke",
-        "\"I love the smell of napalm in the morning.\" ― Apocalypse Now",
-        "\"E.T. phone home.\" ― E.T. the Extra-Terrestrial",
-        "\"Bond. James Bond.\" ― Dr. No",
-        "\"There's no place like home.\" ― The Wizard of Oz",
-        "\"Show me the money!\" ― Jerry Maguire",
-        "\"You can't handle the truth!\" ― A Few Good Men",
-        "\"I'll be back.\" ― The Terminator",
-        "\"If you build it, he will come.\" ― Field of Dreams",
-        "\"Mama always said life was like a box of chocolates.\" ― Forrest Gump",
-        "\"We rob banks.\" ― Bonnie and Clyde",
-        "\"I see dead people.\" ― The Sixth Sense",
-        "\"Houston, we have a problem.\" ― Apollo 13",
-        "\"Keep your friends close, but your enemies closer.\" ― The Godfather Part II",
-        "\"Say 'hello' to my little friend!\" ― Scarface",
-        "\"Elementary, my dear Watson.\" ― Sherlock Holmes",
-        "\"Get your stinking paws off me, you damned dirty ape.\" ― Planet of the Apes",
-        "\"Here's Johnny!\" ― The Shining",
-        "\"They're here!\" ― Poltergeist",
-        "\"Hasta la vista, baby.\" ― Terminator 2",
-        "\"My precious.\" ― The Two Towers",
-        "\"Wax on, wax off.\" ― The Karate Kid",
-        "\"You're gonna need a bigger boat.\" ― Jaws",
-        "\"To infinity and beyond!\" ― Toy Story",
-        "\"I'll have what she's having.\" ― When Harry Met Sally...",
-        "\"Why so serious?\" ― The Dark Knight",
-        "\"Just keep swimming.\" ― Finding Nemo",
-        "\"This is Sparta!\" ― 300",
-        "\"I am your father.\" ― The Empire Strikes Back",
-        "\"Roads? Where we're going we don't need roads.\" ― Back to the Future",
-        "\"Hello. My name is Inigo Montoya. You killed my father. Prepare to die.\" ― The Princess Bride",
-        "\"I'm the king of the world!\" ― Titanic",
-        "\"Keep the change, ya filthy animal.\" ― Home Alone",
-        "\"Good morning, Vietnam!\" ― Good Morning, Vietnam",
-        "\"Chewie, we're home.\" ― The Force Awakens",
-        "\"Great Scott!\" ― Back to the Future",
-        "\"There's no crying in baseball!\" ― A League of Their Own",
-        "\"Life moves pretty fast. If you don't stop and look around once in a while, you could miss it.\" ― Ferris Bueller",
-        "\"Stay gold, Ponyboy.\" ― The Outsiders",
-        "\"I drink your milkshake!\" ― There Will Be Blood",
-        "\"Do, or do not. There is no try.\" ― The Empire Strikes Back",
-        "\"Look at me. I'm the captain now.\" ― Captain Phillips",
-        "\"Are you not entertained?\" ― Gladiator",
-        "\"It's alive! It's alive!\" ― Frankenstein",
-        "\"I'm as mad as hell, and I'm not going to take this anymore!\" ― Network",
-        "\"Help me, Obi-Wan Kenobi. You're my only hope.\" ― Star Wars",
-        "\"Snap out of it!\" ― Moonstruck",
-        "\"You had me at 'hello'.\" ― Jerry Maguire",
-        "\"Badges? We ain't got no badges! We don't need no badges!\" ― The Treasure of the Sierra Madre",
-        "\"Greed, for lack of a better word, is good.\" ― Wall Street",
-        "\"Round up the usual suspects.\" ― Casablanca",
-        "\"I'm walkin' here! I'm walkin' here!\" ― Midnight Cowboy",
-        "\"Louis, I think this is the beginning of a beautiful friendship.\" ― Casablanca",
-        "\"A census taker once tried to test me. I ate his liver with some fava beans and a nice Chianti.\" ― The Silence of the Lambs",
-        "\"Magic Mirror on the wall, who is the fairest one of all?\" ― Snow White",
-        "\"You've got to ask yourself one question: 'Do I feel lucky?' Well, do ya, punk?\" ― Dirty Harry",
-        "\"Listen to them. Children of the night. What music they make.\" ― Dracula",
-        "\"Oh, Jerry, don't let's ask for the moon. We have the stars.\" ― Now, Voyager",
-        "\"Twas beauty killed the beast.\" ― King Kong",
-        "\"Forget it, Jake, it's Chinatown.\" ― Chinatown",
-        "\"I have always depended on the kindness of strangers.\" ― A Streetcar Named Desire",
-        "\"Big things have small beginnings.\" ― Prometheus",
-        "\"The first rule of Fight Club is: You do not talk about Fight Club.\" ― Fight Club",
-        "\"Get out!\" ― Get Out",
-        "\"Dread it. Run from it. Destiny arrives all the same.\" ― Avengers: Infinity War",
-        "\"Avengers... assemble.\" ― Avengers: Endgame",
-        "\"That'll do, pig. That'll do.\" ― Babe",
-        "\"I am Iron Man.\" ― Iron Man",
-        "\"Wilsooooon!\" ― Cast Away",
-        "\"Inconceivable!\" ― The Princess Bride",
-        "\"Wait a minute, wait a minute. You ain't heard nothin' yet!\" ― The Jazz Singer",
-        "\"A boy's best friend is his mother.\" ― Psycho",
-        "\"Gentlemen, you can't fight in here! This is the War Room!\" ― Dr. Strangelove",
-        "\"Open the pod bay doors, HAL.\" ― 2001: A Space Odyssey",
-        "\"Attica! Attica!\" ― Dog Day Afternoon",
-        "\"We'll always have Paris.\" ― Casablanca",
-        "\"You complete me.\" ― Jerry Maguire",
-        "\"Rosebud.\" ― Citizen Kane",
-        "\"Nobody puts Baby in a corner.\" ― Dirty Dancing",
-        "\"What a dump.\" ― Beyond the Forest",
-        "\"I'm not bad. I'm just drawn that way.\" ― Who Framed Roger Rabbit",
-        "\"Shall we play a game?\" ― WarGames",
-        "\"Life is a banquet, and most poor suckers are starving to death!\" ― Auntie Mame",
-        "\"Game over, man! Game over!\" ― Aliens",
-        "\"Whatever you do, don't fall asleep.\" ― A Nightmare on Elm Street",
-        "\"I'm having a friend for dinner.\" ― The Silence of the Lambs",
-        "\"They call me Mister Tibbs!\" ― In the Heat of the Night",
-        "\"Stella! Hey, Stella!\" ― A Streetcar Named Desire",
-        "\"Shane. Shane. Come back!\" ― Shane",
-        "\"Well, nobody's perfect.\" ― Some Like It Hot",
-        "\"Made it, Ma! Top of the world!\" ― White Heat",
+        "\"The only thing we have to fear is fear itself.\" ― Franklin D. Roosevelt",
+        "\"I think, therefore I am.\" ― René Descartes",
+        "\"To be or not to be, that is the question.\" ― William Shakespeare",
+        "\"That's one small step for man, one giant leap for mankind.\" ― Neil Armstrong",
+        "\"The journey of a thousand miles begins with one step.\" ― Lao Tzu",
+        "\"... the educated person is not the person who can answer the questions, but the person who can question the answers.\" ― Theodore Schick Jr.",
+        "\"A fanatic is a person who can't change his mind and won't change the subject.\" ― Winston Churchill",
+        "\"Beware of the man who works hard to learn something, learns it, and finds himself no wiser than before.\" ― Kurt Vonnegut",
+        "\"Contrariwise,\" continued Tweedledee, \"if it was so, it might be; and if it were so, it would be; but as it isn't, it ain't. That's logic!\" ― Lewis Carroll",
+        "\"I have yet to see any problem, however complicated, which, when looked at in the right way, did not become still more complicated.\" ― Paul Anderson",
+        "\"If you go on with this nuclear arms race, all you are going to do is make the rubble bounce.\" ― Winston Churchill",
+        "\"Laughter is the closest distance between two people.\" ― Victor Borge",
+        "\"Man invented language to satisfy his deep need to complain.\" ― Lily Tomlin",
+        "\"The society which scorns excellence in plumbing as a humble activity and tolerates shoddiness in philosophy because it is an exaulted activity will have neither good plumbing nor good philosophy.\" ― John Gardner",
+        "\"To YOU I'm an atheist; to God, I'm the Loyal Opposition.\" ― Woody Allen",
+        "\"Under capitalism, man exploits man. Under Communism, it's just the opposite.\" ― John Kenneth Galbraith",
+        "\"Where shall I begin, please your Majesty?\" he asked. \"Begin at the beginning,\" the King said, gravesly, \"and go on till you come to the end: then stop.\" ― Lewis Carroll",
+        "\"A great many people think they are thinking when they are merely rearranging their prejudices.\" ― William James",
+        "\"A person with one watch knows what time it is; a person with two watches is never sure.\" ― Proverb",
+        "\"A programmer is a person who passes as an exacting expert on the basis of being able to turn out, after innumerable punching, an infinite series of incomprehensive answers...\" ― IEEE Grid",
         "\"One does not simply walk into Mordor.\" ― Boromir",
         "\"Shut up and take my money!\" ― Fry",
         "\"I had fun once. It was awful.\" ― Grumpy Cat",
@@ -282,6 +229,7 @@ class LauncherViewModel : ViewModel() {
 
     fun loadApps(context: Context) {
         nextFortune()
+        loadSettings(context)
         viewModelScope.launch {
             val packageManager = context.packageManager
             val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
@@ -303,20 +251,22 @@ class LauncherViewModel : ViewModel() {
         }
     }
 
-    fun togglePinToTaskbar(packageName: String) {
+    fun togglePinToTaskbar(context: Context, packageName: String) {
         _pinnedToTaskbar.value = if (_pinnedToTaskbar.value.contains(packageName)) {
             _pinnedToTaskbar.value - packageName
         } else {
             _pinnedToTaskbar.value + packageName
         }
+        saveSettings(context)
     }
 
-    fun togglePinToDesktop(packageName: String) {
+    fun togglePinToDesktop(context: Context, packageName: String) {
         _pinnedToDesktop.value = if (_pinnedToDesktop.value.contains(packageName)) {
             _pinnedToDesktop.value - packageName
         } else {
             _pinnedToDesktop.value + packageName
         }
+        saveSettings(context)
     }
 
     fun openAppSettings(context: Context, packageName: String) {
