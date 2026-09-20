@@ -86,6 +86,7 @@ fun LauncherScreen(viewModel: LauncherViewModel = viewModel()) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = androidx.compose.ui.graphics.Color.Black, // Explicitly set to Black
         bottomBar = {
             Taskbar(
                 apps = apps,
