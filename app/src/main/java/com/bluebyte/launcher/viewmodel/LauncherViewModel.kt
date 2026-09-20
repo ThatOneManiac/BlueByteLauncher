@@ -69,7 +69,7 @@ class LauncherViewModel : ViewModel() {
             putString("orientation", orientationMode)
             putStringSet("pinned_taskbar", _pinnedToTaskbar.value)
             putStringSet("pinned_desktop", _pinnedToDesktop.value)
-            apply()
+            commit() // Use commit() for guaranteed persistence
         }
     }
 

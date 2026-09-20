@@ -20,27 +20,26 @@
 package com.bluebyte.launcher.ui.components
 
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bluebyte.launcher.viewmodel.LauncherViewModel
-
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.border
 import com.bluebyte.launcher.ui.theme.CyanAccent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SettingsDialog(
@@ -48,21 +47,22 @@ fun SettingsDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    
+    // Using OpenDocument for better persistence support like in BlueByte-Launcher repo
     val wallpaperLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let { 
-            // Request persistable URI permission so the image remains accessible after reboot
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
             try {
-                context.contentResolver.takePersistableUriPermission(
-                    it,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
+                // Take persistable permission to ensure image remains accessible after reboot
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                context.contentResolver.takePersistableUriPermission(it, takeFlags)
+                
+                viewModel.backgroundUri = it.toString()
+                viewModel.saveSettings(context)
             } catch (e: Exception) {
-                // Ignore if not supported by the provider
+                e.printStackTrace()
             }
-            viewModel.backgroundUri = it.toString()
-            viewModel.saveSettings(context)
         }
     }
 
@@ -157,9 +157,7 @@ fun SettingsDialog(
                         Text(text = "Background", style = MaterialTheme.typography.titleMedium, color = Color.White)
                         Button(
                             onClick = { 
-                                wallpaperLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
+                                wallpaperLauncher.launch(arrayOf("image/*"))
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
                         ) {
