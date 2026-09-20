@@ -33,10 +33,12 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bluebyte.launcher.model.AppInfo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LauncherViewModel : ViewModel() {
 
@@ -75,11 +77,12 @@ class LauncherViewModel : ViewModel() {
         val prefs = getPrefs(context)
         tileSize = prefs.getFloat("tile_size", 65f).dp
         columns = prefs.getInt("columns", 3)
-        backgroundColor = Color(prefs.getLong("bg_color", Color.Black.value.toLong()).toULong())
+        val colorLong = prefs.getLong("bg_color", Color.Black.value.toLong())
+        backgroundColor = Color(colorLong.toULong())
         backgroundUri = prefs.getString("bg_uri", null)
         orientationMode = prefs.getString("orientation", "auto") ?: "auto"
-        _pinnedToTaskbar.value = prefs.getStringSet("pinned_taskbar", emptySet()) ?: emptySet()
-        _pinnedToDesktop.value = prefs.getStringSet("pinned_desktop", emptySet()) ?: emptySet()
+        _pinnedToTaskbar.value = prefs.getStringSet("pinned_taskbar", emptySet())?.toSet() ?: emptySet()
+        _pinnedToDesktop.value = prefs.getStringSet("pinned_desktop", emptySet())?.toSet() ?: emptySet()
     }
 
     val fortunes = listOf(
@@ -230,13 +233,14 @@ class LauncherViewModel : ViewModel() {
     fun loadApps(context: Context) {
         nextFortune()
         loadSettings(context)
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val packageManager = context.packageManager
             val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
                 addCategory(Intent.CATEGORY_LAUNCHER)
             }
             
             val apps = packageManager.queryIntentActivities(mainIntent, 0)
+                .filter { it.activityInfo.packageName != context.packageName } // Don't show the launcher itself
                 .map { resolveInfo ->
                     val iconDrawable = resolveInfo.loadIcon(packageManager)
                     AppInfo(
@@ -247,24 +251,28 @@ class LauncherViewModel : ViewModel() {
                 }
                 .sortedBy { it.label.lowercase() }
             
-            _appsList.value = apps
+            withContext(Dispatchers.Main) {
+                _appsList.value = apps
+            }
         }
     }
 
     fun togglePinToTaskbar(context: Context, packageName: String) {
-        _pinnedToTaskbar.value = if (_pinnedToTaskbar.value.contains(packageName)) {
-            _pinnedToTaskbar.value - packageName
+        val current = _pinnedToTaskbar.value
+        _pinnedToTaskbar.value = if (current.contains(packageName)) {
+            current - packageName
         } else {
-            _pinnedToTaskbar.value + packageName
+            current + packageName
         }
         saveSettings(context)
     }
 
     fun togglePinToDesktop(context: Context, packageName: String) {
-        _pinnedToDesktop.value = if (_pinnedToDesktop.value.contains(packageName)) {
-            _pinnedToDesktop.value - packageName
+        val current = _pinnedToDesktop.value
+        _pinnedToDesktop.value = if (current.contains(packageName)) {
+            current - packageName
         } else {
-            _pinnedToDesktop.value + packageName
+            current + packageName
         }
         saveSettings(context)
     }
