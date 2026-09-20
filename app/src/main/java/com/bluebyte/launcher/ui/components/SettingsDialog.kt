@@ -145,7 +145,7 @@ fun SettingsDialog(
                         Text(text = "Version 1.0.0", color = Color.Gray)
                         Text(text = "Licensed under GNU GPLv2", color = Color.Gray, fontSize = 12.sp)
                         Text(
-                            text = "A modern, bloat-free launcher for Android, inspired by simplicity and customization.",
+                            text = "A modern, bloat-free launcher for Android, inspired by simplicity and customization. Swipe Right to open Menu.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.8f),
                             modifier = Modifier.padding(top = 8.dp)
