@@ -19,6 +19,7 @@
 
 package com.bluebyte.launcher.ui.components
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border
 import com.bluebyte.launcher.ui.theme.CyanAccent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 
@@ -47,9 +49,18 @@ fun SettingsDialog(
 ) {
     val context = LocalContext.current
     val wallpaperLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let { 
+            // Request persistable URI permission so the image remains accessible after reboot
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (e: Exception) {
+                // Ignore if not supported by the provider
+            }
             viewModel.backgroundUri = it.toString()
             viewModel.saveSettings(context)
         }
@@ -145,7 +156,11 @@ fun SettingsDialog(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Background", style = MaterialTheme.typography.titleMedium, color = Color.White)
                         Button(
-                            onClick = { wallpaperLauncher.launch("image/*") },
+                            onClick = { 
+                                wallpaperLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = CyanAccent)
                         ) {
                             Text("Choose Wallpaper", color = Color.Black)
